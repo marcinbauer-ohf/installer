@@ -27,6 +27,7 @@ import "../components/ha-svg-icon.js";
 import "../components/diagnostics-actions.js";
 import "../components/update-banner.js";
 import { installerUpdate } from "../state/installer-update.js";
+import { fieldStyles } from "../utils/field-styles.js";
 
 // Each language in its own words, like Deutsch, capitalized as in a menu
 function languageName(tag: string): string {
@@ -58,6 +59,7 @@ export class WelcomeView extends LitElement {
   }
 
   static styles = [
+    fieldStyles,
     reducedMotionStyles,
     css`
       /* The content centers in the space above the footer, and the footer

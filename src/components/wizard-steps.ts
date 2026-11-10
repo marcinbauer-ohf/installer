@@ -32,6 +32,7 @@ import "../views/device-setup-view.js";
 import "../views/device-done-view.js";
 import "../views/utm/utm-check-view.js";
 import "../views/utm/utm-configure-view.js";
+import type { UtmConfigureView } from "../views/utm/utm-configure-view.js";
 import "../views/utm/utm-confirm-view.js";
 import "../views/utm/utm-progress-view.js";
 import "../views/utm/utm-success-view.js";
@@ -266,6 +267,11 @@ export const WIZARD_STEPS: Record<
       // the view first saves there is none, and the default name applies.
       ready: (selections) =>
         selections.vmName === undefined || isValidUtmVmName(selections.vmName),
+      beforeNext: {
+        run: (view) => (view as UtmConfigureView).check(),
+        label: () => localize("components.wizard_steps.checking_settings"),
+        until: "selections",
+      },
     },
     confirm: {
       render: () => html`<utm-confirm-view></utm-confirm-view>`,
@@ -273,7 +279,14 @@ export const WIZARD_STEPS: Record<
     },
     install: {
       render: () => html`<utm-progress-view></utm-progress-view>`,
-      install: vmInstall,
+      install: {
+        ...vmInstall,
+        // UTM already has a VM with the name: pick another
+        changeChoice: () => ({
+          step: "configure",
+          label: localize("components.wizard_steps.choose_another_name"),
+        }),
+      },
     },
     success: { render: () => html`<utm-success-view></utm-success-view>` },
   },

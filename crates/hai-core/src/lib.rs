@@ -218,6 +218,9 @@ pub trait UtmBackend {
     /// time shows the Automation prompt, and opens UTM.
     fn check_automation(&self) -> Result<()>;
 
+    /// Refuse a VM name UTM already uses, before anything is downloaded.
+    fn check_vm_name(&self, name: &str) -> Result<()>;
+
     /// Create a Home Assistant VM in UTM, reporting progress.
     async fn create_vm<P: ProgressCallback>(
         &self,

@@ -18,6 +18,7 @@ import "@home-assistant/webawesome/dist/components/button/button.js";
 import "../../components/info-dialog.js";
 import "../../components/inline-notice.js";
 import "./live-usb-gate.js";
+import { fieldStyles } from "../../utils/field-styles.js";
 
 const FALLBACK_NAME = "hai-live-haos.iso";
 
@@ -26,6 +27,7 @@ const FALLBACK_NAME = "hai-live-haos.iso";
 export class LiveIsoLocationView extends LitElement {
   protected readonly _accessibility = new ViewAccessibility(this);
   static styles = [
+    fieldStyles,
     liveUsbStyles,
     css`
       .folder-row {

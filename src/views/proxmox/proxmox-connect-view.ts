@@ -25,6 +25,7 @@ import { fieldError, fieldErrorStyles } from "../../utils/field-error.js";
 import { renderStepHeading, stepStyles } from "../../utils/step-styles.js";
 import { panelStyles } from "../../utils/panel-styles.js";
 import { renderStatusRow, statusRowStyles } from "../../utils/load-state.js";
+import { fieldStyles } from "../../utils/field-styles.js";
 
 /** The fields that say what to fix in them */
 type Field = "serverUrl" | "username" | "password" | "totp";
@@ -59,6 +60,7 @@ function serverOrigin(url: string): string {
 export class ProxmoxConnectView extends LitElement {
   protected readonly _accessibility = new ViewAccessibility(this);
   static styles = [
+    fieldStyles,
     stepStyles,
     statusRowStyles,
     fieldErrorStyles,

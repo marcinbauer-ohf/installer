@@ -425,6 +425,12 @@ export async function checkUtmAutomation(): Promise<void> {
   return invoke<void>("check_utm_automation");
 }
 
+/** Refuse a VM name UTM already uses, so it can be changed before Next. */
+export async function checkUtmVmName(name: string): Promise<void> {
+  if (MOCK_ALLOWED && isBrowserOnly()) return;
+  return invoke<void>("check_utm_vm_name", { name });
+}
+
 /** Forget a downloaded image which was not consumed by VM creation. */
 export async function discardUtmImage(imagePath: string): Promise<void> {
   if (MOCK_ALLOWED && isBrowserOnly()) return;

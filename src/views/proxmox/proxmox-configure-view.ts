@@ -56,6 +56,7 @@ import {
 } from "./proxmox-validation.js";
 import { VmSettings, configCardStyles } from "../../utils/vm-settings.js";
 import { renderStepHeading, stepStyles } from "../../utils/step-styles.js";
+import { fieldStyles } from "../../utils/field-styles.js";
 import {
   loadStateStyles,
   renderLoadError,
@@ -83,6 +84,7 @@ function renderIcon(path: string) {
 export class ProxmoxConfigureView extends LitElement {
   protected readonly _accessibility = new ViewAccessibility(this);
   static styles = [
+    fieldStyles,
     stepStyles,
     loadStateStyles,
     srOnlyStyles,

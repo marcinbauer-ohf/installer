@@ -189,6 +189,40 @@ fn automation_allowed(mut run: impl FnMut(&str, &[&str]) -> Result<String>) -> R
         })
 }
 
+/// UTM refuses a duplicate name only after it has imported the drive. Asking
+/// first fails before the image is copied, with a message that names the fix.
+#[cfg(any(target_os = "macos", test))]
+fn ensure_vm_name_free(
+    name: &str,
+    mut run: impl FnMut(&str, &[&str]) -> Result<String>,
+) -> Result<()> {
+    match run(NAME_TAKEN_SCRIPT, &[name]) {
+        Ok(taken) if taken == "true" => Err(Error::Utm(crate::message!(
+            "backend.utm.vm_name_taken",
+            name = name,
+        ))),
+        Ok(_) => Ok(()),
+        // Nothing is created, so an unanswered prompt is nothing to keep
+        Err(Error::UtmOperationUncertain(message)) => Err(Error::Utm(message)),
+        Err(error) => Err(error),
+    }
+}
+
+fn check_vm_name(name: &str) -> Result<()> {
+    #[cfg(target_os = "macos")]
+    {
+        ensure_vm_name_free(name, macos::run_applescript)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = name;
+        Err(Error::UnsupportedPlatform(
+            "UTM is only available on macOS".to_string(),
+        ))
+    }
+}
+
 /// Create a Home Assistant VM using UTM
 async fn create_vm<P: ProgressCallback>(
     config: &UtmVmConfig,
@@ -270,6 +304,13 @@ fn applescript_error(stderr: &str) -> Error {
 const AUTOMATION_SCRIPT: &str = r#"tell application "UTM"
     count virtual machines
 end tell"#;
+
+#[cfg(any(target_os = "macos", test))]
+const NAME_TAKEN_SCRIPT: &str = r#"on run {vmName}
+    tell application "UTM"
+        return exists virtual machine named vmName
+    end tell
+end run"#;
 
 #[cfg(any(target_os = "macos", test))]
 const STATUS_SCRIPT: &str = r#"on run {vmId}
@@ -579,6 +620,7 @@ mod macos {
         });
 
         ensure_apple_silicon()?;
+        ensure_vm_name_free(&config.name, run_applescript)?;
         let network_interface = get_primary_network_interface();
 
         // UTM ignores `guest size` for an imported drive and keeps the size
@@ -620,6 +662,10 @@ impl UtmBackend for Backend {
 
     fn check_automation(&self) -> Result<()> {
         check_automation()
+    }
+
+    fn check_vm_name(&self, name: &str) -> Result<()> {
+        check_vm_name(name)
     }
 
     async fn create_vm<P: ProgressCallback>(
@@ -685,6 +731,37 @@ mod tests {
 
         // An unanswered prompt created nothing, so it is an ordinary UTM error
         let unanswered = automation_allowed(|_, _| {
+            Err(Error::UtmOperationUncertain(crate::message!(
+                "backend.utm.no_response",
+                minutes = 5,
+            )))
+        });
+        assert!(matches!(
+            unanswered,
+            Err(Error::Utm(message)) if message.key == "backend.utm.no_response"
+        ));
+    }
+
+    #[test]
+    fn a_taken_name_is_refused_before_anything_is_copied() {
+        let mut scripts = Vec::new();
+        let taken = ensure_vm_name_free("Home Assistant", |script, arguments| {
+            scripts.push((script.to_string(), arguments.to_vec().join(",")));
+            Ok("true".into())
+        });
+        assert_eq!(
+            scripts,
+            [(NAME_TAKEN_SCRIPT.to_string(), "Home Assistant".to_string())]
+        );
+        let Err(Error::Utm(message)) = taken else {
+            panic!("expected a taken-name error")
+        };
+        assert_eq!(message.key, "backend.utm.vm_name_taken");
+        assert!(message.to_string().contains("\"Home Assistant\""));
+
+        assert!(ensure_vm_name_free("Home Assistant", |_, _| Ok("false".into())).is_ok());
+
+        let unanswered = ensure_vm_name_free("Home Assistant", |_, _| {
             Err(Error::UtmOperationUncertain(crate::message!(
                 "backend.utm.no_response",
                 minutes = 5,

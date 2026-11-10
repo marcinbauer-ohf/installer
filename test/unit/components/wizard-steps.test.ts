@@ -139,9 +139,13 @@ describe("wizard-steps", () => {
     }
   });
 
-  it("only holds Next for Proxmox and the official hardware", () => {
+  it("only holds Next for the VM settings and the official hardware", () => {
     expect(wizardStep("proxmox", "connection")?.beforeNext?.until).to.equal(
       "flow"
+    );
+    // UTM refuses a name it already uses
+    expect(wizardStep("vm", "configure")?.beforeNext?.until).to.equal(
+      "selections"
     );
     expect(wizardStep("proxmox", "configure")?.beforeNext?.until).to.equal(
       "selections"
@@ -153,6 +157,7 @@ describe("wizard-steps", () => {
     const held = new Set([
       "proxmox/connection",
       "proxmox/configure",
+      "vm/configure",
       "ha-hardware/device",
     ]);
     for (const flow of FLOWS) {
@@ -214,11 +219,18 @@ describe("wizard-steps", () => {
     }
     // A VM made by then can't take other settings
     for (const flow of ["vm", "proxmox"] as const) {
-      const install = wizardStep(flow, "install")!.install!;
-      expect(install.backAfterError, flow).to.be.undefined;
-      expect(install.changeChoice, flow).to.be.undefined;
+      expect(wizardStep(flow, "install")!.install!.backAfterError, flow).to.be
+        .undefined;
     }
-    expect(wizardStep("vm", "install")!.install!.reconnect).to.be.undefined;
+    expect(wizardStep("proxmox", "install")!.install!.changeChoice).to.be
+      .undefined;
+    // A name UTM already uses is fixed before any VM is made
+    const utm = wizardStep("vm", "install")!.install!;
+    expect(utm.changeChoice!({})).to.deep.equal({
+      step: "configure",
+      label: "Choose another name",
+    });
+    expect(utm.reconnect).to.be.undefined;
     expect(
       wizardStep("proxmox", "install")!.install!.reconnect!()
     ).to.deep.equal({ step: "connection", label: "Reconnect" });

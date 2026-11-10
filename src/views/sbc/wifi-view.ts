@@ -14,12 +14,14 @@ import { renderStepHeading, stepStyles } from "../../utils/step-styles.js";
 import { panelStyles } from "../../utils/panel-styles.js";
 import { fieldError, fieldErrorStyles } from "../../utils/field-error.js";
 import { nextOnEnter } from "../../components/wizard-next.js";
+import { fieldStyles } from "../../utils/field-styles.js";
 
 /** Optional step for boards with built-in Wi-Fi: the network to join. */
 @customElement("wifi-view")
 export class WifiView extends LitElement {
   protected readonly _accessibility = new ViewAccessibility(this);
   static styles = [
+    fieldStyles,
     stepStyles,
     fieldErrorStyles,
     css`

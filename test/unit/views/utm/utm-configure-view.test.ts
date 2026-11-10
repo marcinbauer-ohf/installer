@@ -13,6 +13,7 @@ import "../../../../src/views/utm/utm-configure-view.js";
 import type { UtmConfigureView } from "../../../../src/views/utm/utm-configure-view.js";
 import {
   deferred,
+  ipcError,
   mockTauriIpc,
   restoreTauriIpc,
   settle,
@@ -288,6 +289,41 @@ describe("utm-configure-view", () => {
         .shadowRoot!.querySelector('[role="slider"]')!
         .getAttribute("aria-valuetext")
     ).to.equal("10 cores");
+  });
+
+  it("refuses a name UTM already uses at its field, until it is changed", async () => {
+    const el = await mount();
+    const names: string[] = [];
+    let rejection: unknown = ipcError("utm", "", false, {
+      message_key: "backend.utm.vm_name_taken",
+      message_params: { name: "Home Assistant" },
+    });
+    mockTauriIpc((cmd, args) => {
+      if (cmd !== "check_utm_vm_name") throw new Error(cmd);
+      names.push((args as { name: string }).name);
+      if (rejection) throw rejection;
+      return undefined;
+    });
+
+    expect(await el.check()).to.be.false;
+    await el.updateComplete;
+    expect(names).to.deep.equal(["Home Assistant"]);
+    const hint = el.shadowRoot!.querySelector(".name-hint")!;
+    expect(hint.textContent).to.contain(
+      'UTM already has a VM named "Home Assistant"'
+    );
+    const name = el.shadowRoot!.querySelector<WaInput>("wa-input")!;
+    expect(el.shadowRoot!.activeElement).to.equal(name);
+
+    // The form stays, so the name can be fixed right here
+    name.value = "My Home";
+    name.dispatchEvent(new Event("input"));
+    await el.updateComplete;
+    expect(hint.textContent).to.equal("Shown in UTM's virtual machine list");
+
+    rejection = undefined;
+    expect(await el.check()).to.be.true;
+    expect(names[1]).to.equal("My Home");
   });
 
   it("asks for Next on Enter in the name, not on the sliders", async () => {

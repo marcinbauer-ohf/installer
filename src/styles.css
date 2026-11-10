@@ -1,3 +1,18 @@
+/* Geist by Vercel, SIL Open Font License 1.1. Bundled so the installer
+ * renders the same offline; see public/assets/fonts/geist/LICENSE.txt. */
+@font-face {
+  font-family: Geist;
+  src: url("/assets/fonts/geist/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/assets/fonts/geist/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /* HAI - Home Assistant Installer
  * Base styles and CSS custom properties
  */
@@ -58,7 +73,7 @@
   /* Device paths, fingerprints and other text to read character by
    * character */
   --ha-font-family-code:
-    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Map Web Awesome color tokens onto our theme colors. wa-button reads these
    * through its variant -> generic token chain (e.g. variant="brand" resolves
@@ -108,6 +123,10 @@
   --wa-color-overlay-modal: rgba(0, 0, 0, 0.5);
   /* Dialogs, a little rounder than the cards under them */
   --wa-panel-border-radius: 16px;
+  /* Buttons are pills, like in the Home Assistant frontend. Set on :root so
+   * it inherits into every component's shadow root; fields and selects take
+   * their corners back with fieldStyles (utils/field-styles.ts). */
+  --wa-form-control-border-radius: var(--wa-border-radius-pill);
 
   /* The asterisk after a required field's label, without text for screen
    * readers: it became part of the field's name ("Password *"), and they
@@ -116,8 +135,16 @@
 
   /* Typography */
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu,
-    Cantarell, "Helvetica Neue", sans-serif;
+    Geist,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen-Sans,
+    Ubuntu,
+    Cantarell,
+    "Helvetica Neue",
+    sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
